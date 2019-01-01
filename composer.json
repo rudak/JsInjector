@@ -1,6 +1,7 @@
 {
     "name": "rudak/js-injector",
     "description": "Injection de constantes PHP dans un JS - TEST",
+    "license": "Apache License 2.0",
     "require": {
         "php": "^5.6"
     }

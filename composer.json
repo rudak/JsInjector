@@ -1,0 +1,7 @@
+{
+    "name": "rudak/js-injector",
+    "description": "Injection de constantes PHP dans un JS - TEST",
+    "require": {
+        "php": "^5.6"
+    }
+}

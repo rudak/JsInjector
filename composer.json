@@ -3,7 +3,7 @@
     "description": "Injection de constantes PHP dans un JS - TEST",
     "license": "Apache-2.0",
     "require": {
-        "php": "^5.6"
+        "php": ">=5.6"
     },
     "autoload": {
         "psr-4": {"Rudak\\JsInjector\\": "src"}

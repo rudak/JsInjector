@@ -1,10 +1,19 @@
 <?php
+
 namespace Rudak\JsInjector;
 
-class JsInjector
+use Rudak\JsInjector\DependencyInjection\JsInjectorExtension;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+/**
+ * Class JsInjector
+ *
+ * @package Rudak\JsInjector
+ */
+class JsInjector extends Bundle
 {
-    public function coucou()
+    public function getContainerExtension()
     {
-        echo '...coucou ?';
+        return new JsInjectorExtension();
     }
 }

@@ -6,6 +6,9 @@
         "php": ">=5.6"
     },
     "autoload": {
-        "psr-4": {"Rudak\\JsInjector\\": "src"}
+        "psr-4": {
+            "Rudak\\JsInjector\\": "src"
+        }
     }
 }
+

@@ -2,39 +2,51 @@
 
 namespace Rudak\JsInjector\Command;
 
+use App\Entity\User\Like;
+use Rudak\JsInjector\Harvester\HarvesterInterface;
+use Rudak\JsInjector\Service\Bim;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Rudak\JsInjector\Harvester\ValuesHarvester;
 
 class RudakGenerateJsCommand extends Command
 {
+
     protected static $defaultName = 'rudak:generate:js';
+
+    private          $valuesHarvester;
+
+    /**
+     * RudakGenerateJsCommand constructor.
+     */
+    public function __construct(ValuesHarvester $valuesHarvester)
+    {
+        $this->valuesHarvester = $valuesHarvester;
+        parent::__construct();
+    }
+
 
     protected function configure()
     {
         $this
-            ->setDescription('Add a short description for your command')
-            ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
-            ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
-        ;
+            ->setDescription('Force JS file generation from PHP values');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $arg1 = $input->getArgument('arg1');
+        $io->title('JS FILE GENERATION');
 
-        if ($arg1) {
-            $io->note(sprintf('You passed an argument: %s', $arg1));
+        foreach ($this->valuesHarvester->getValuesProviders() as $provider) {
+            if (!$provider instanceof HarvesterInterface) {
+                return;
+            }
+            dump($provider->getValues());
         }
-
-        if ($input->getOption('option1')) {
-            // ...
-        }
-
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
+        $io->success('Js file generated');
     }
 }

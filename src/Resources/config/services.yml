@@ -1,5 +1,6 @@
-services:
+parameters:
 
+services:
   _defaults:
     autowire: true      # Automatically injects dependencies in your services.
     autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
@@ -8,5 +9,10 @@ services:
   Rudak\JsInjector\:
     resource: '../../../src/*'
 
+  Rudak\JsInjector\Service\CacheManager:
+    arguments: ['%kernel.cache_dir%']
   Rudak\JsInjector\Harvester\ValuesHarvester:
     arguments: [!tagged rudak.injector]
+  Rudak\JsInjector\Command\RudakGenerateJsCommand:
+    arguments:
+      $project_dir: "%kernel.project_dir%"

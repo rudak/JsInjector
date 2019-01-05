@@ -1,1 +1,6 @@
-var Injection = JSON.parse(fs.readFileSync("{{ relativePath|raw }}").toString());
+{% if  jsonContent and variableNames %}
+// json to inject
+var jsonContent = '{{ jsonContent|raw }}' || {};
+// creating {{ variableNames|length }} variable
+var { {{ variableNames|join(',') }} } = JSON.parse(jsonContent);
+{% endif %}

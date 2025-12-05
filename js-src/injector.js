@@ -1,0 +1,195 @@
+import { InjectionError, ValidationError } from './errors.js';
+import { validateVariableNames, validateOptions, isJsonSerializable } from './utils/validation.js';
+import { deepClone } from './utils/parsing.js';
+
+/**
+ * Default injection options
+ * @type {Object}
+ */
+const DEFAULT_OPTIONS = {
+  target: null, // Will default to globalThis
+  namespace: null, // Optional namespace for all injected values
+  freeze: false, // Whether to freeze injected values
+  overwrite: true, // Whether to overwrite existing values
+};
+
+/**
+ * Injects values into the target context
+ * @param {Object} values - Object with variable names as keys and values to inject
+ * @param {Object} [options] - Injection options
+ * @param {Object} [options.target] - Target object for injection (default: globalThis)
+ * @param {string} [options.namespace] - Optional namespace to group injected values
+ * @param {boolean} [options.freeze=false] - Whether to freeze injected values
+ * @param {boolean} [options.overwrite=true] - Whether to overwrite existing values
+ * @returns {{success: boolean, injected: string[], errors: Array<{key: string, error: string}>}} Injection result
+ * @throws {ValidationError} If values or options are invalid
+ */
+export const inject = (values, options = {}) => {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const target = opts.target || globalThis;
+
+  // Validate options
+  validateOptions(opts);
+
+  // Validate values object
+  if (typeof values !== 'object' || values === null) {
+    throw new ValidationError('values must be a non-null object');
+  }
+
+  // Validate variable names
+  const validation = validateVariableNames(values);
+  if (!validation.valid) {
+    throw new ValidationError(
+      `Invalid variable name: "${validation.invalidKey}"`,
+      validation.invalidKey
+    );
+  }
+
+  const result = {
+    success: true,
+    injected: [],
+    errors: [],
+  };
+
+  // Determine the injection target
+  let injectionTarget = target;
+
+  if (opts.namespace) {
+    if (!target[opts.namespace]) {
+      target[opts.namespace] = {};
+    }
+    injectionTarget = target[opts.namespace];
+  }
+
+  // Inject each value
+  for (const [key, value] of Object.entries(values)) {
+    try {
+      // Check if key already exists and overwrite is false
+      if (!opts.overwrite && key in injectionTarget) {
+        result.errors.push({
+          key,
+          error: `Key "${key}" already exists and overwrite is disabled`,
+        });
+        continue;
+      }
+
+      // Check if value is serializable
+      if (!isJsonSerializable(value)) {
+        result.errors.push({
+          key,
+          error: `Value for "${key}" is not JSON serializable`,
+        });
+        continue;
+      }
+
+      // Clone and optionally freeze the value
+      let valueToInject = deepClone(value);
+
+      if (opts.freeze && typeof valueToInject === 'object' && valueToInject !== null) {
+        valueToInject = Object.freeze(valueToInject);
+      }
+
+      injectionTarget[key] = valueToInject;
+      result.injected.push(key);
+    } catch (error) {
+      result.errors.push({
+        key,
+        error: error.message,
+      });
+    }
+  }
+
+  if (result.errors.length > 0) {
+    result.success = result.injected.length > 0;
+  }
+
+  return result;
+};
+
+/**
+ * Injects values from a JSON string
+ * @param {string} jsonString - JSON string containing values to inject
+ * @param {Object} [options] - Injection options
+ * @returns {{success: boolean, injected: string[], errors: Array<{key: string, error: string}>}} Injection result
+ * @throws {InjectionError} If JSON parsing fails
+ * @throws {ValidationError} If values or options are invalid
+ */
+export const injectFromJson = (jsonString, options = {}) => {
+  let values;
+
+  try {
+    values = JSON.parse(jsonString);
+  } catch (error) {
+    throw new InjectionError(`Failed to parse JSON: ${error.message}`, 'PARSE_ERROR');
+  }
+
+  return inject(values, options);
+};
+
+/**
+ * Generates JavaScript code that injects values when executed
+ * @param {Object} values - Object with variable names as keys and values to inject
+ * @param {Object} [options] - Generation options
+ * @param {string} [options.namespace] - Optional namespace for all injected values
+ * @returns {string} JavaScript code string
+ * @throws {ValidationError} If values are invalid
+ */
+export const generateInjectionCode = (values, options = {}) => {
+  // Validate values object
+  if (typeof values !== 'object' || values === null) {
+    throw new ValidationError('values must be a non-null object');
+  }
+
+  // Validate variable names
+  const validation = validateVariableNames(values);
+  if (!validation.valid) {
+    throw new ValidationError(
+      `Invalid variable name: "${validation.invalidKey}"`,
+      validation.invalidKey
+    );
+  }
+
+  const jsonContent = JSON.stringify(values);
+  const variableNames = Object.keys(values);
+
+  if (variableNames.length === 0) {
+    return '';
+  }
+
+  if (options.namespace) {
+    return `var ${options.namespace} = ${jsonContent};`;
+  }
+
+  return `// json to inject
+var jsonContent = '${jsonContent.replace(/'/g, "\\'")}' || {};
+// creating ${variableNames.length} variable(s)
+var { ${variableNames.join(', ')} } = JSON.parse(jsonContent);`;
+};
+
+/**
+ * Removes injected values from the target context
+ * @param {string[]} keys - Array of variable names to remove
+ * @param {Object} [options] - Options
+ * @param {Object} [options.target] - Target object (default: globalThis)
+ * @param {string} [options.namespace] - Namespace where values were injected
+ * @returns {string[]} Array of keys that were successfully removed
+ */
+export const remove = (keys, options = {}) => {
+  const target = options.target || globalThis;
+  let injectionTarget = target;
+
+  if (options.namespace && target[options.namespace]) {
+    injectionTarget = target[options.namespace];
+  }
+
+  const removed = [];
+
+  for (const key of keys) {
+    if (key in injectionTarget) {
+      delete injectionTarget[key];
+      removed.push(key);
+    }
+  }
+
+  return removed;
+};

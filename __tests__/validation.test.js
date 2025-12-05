@@ -33,6 +33,23 @@ describe('Validation Utils', () => {
       expect(isValidVariableName(undefined)).toBe(false);
       expect(isValidVariableName({})).toBe(false);
     });
+
+    it('should return false for JavaScript reserved keywords', () => {
+      expect(isValidVariableName('class')).toBe(false);
+      expect(isValidVariableName('function')).toBe(false);
+      expect(isValidVariableName('const')).toBe(false);
+      expect(isValidVariableName('let')).toBe(false);
+      expect(isValidVariableName('var')).toBe(false);
+      expect(isValidVariableName('return')).toBe(false);
+      expect(isValidVariableName('if')).toBe(false);
+      expect(isValidVariableName('else')).toBe(false);
+      expect(isValidVariableName('for')).toBe(false);
+      expect(isValidVariableName('while')).toBe(false);
+      expect(isValidVariableName('this')).toBe(false);
+      expect(isValidVariableName('null')).toBe(false);
+      expect(isValidVariableName('true')).toBe(false);
+      expect(isValidVariableName('false')).toBe(false);
+    });
   });
 
   describe('validateVariableNames', () => {

@@ -1,12 +1,62 @@
 import { ValidationError } from '../errors.js';
 
 /**
+ * JavaScript reserved keywords that cannot be used as variable names
+ * @type {Set<string>}
+ */
+const RESERVED_KEYWORDS = new Set([
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'debugger',
+  'default',
+  'delete',
+  'do',
+  'else',
+  'enum',
+  'export',
+  'extends',
+  'false',
+  'finally',
+  'for',
+  'function',
+  'if',
+  'import',
+  'in',
+  'instanceof',
+  'let',
+  'new',
+  'null',
+  'return',
+  'static',
+  'super',
+  'switch',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'typeof',
+  'var',
+  'void',
+  'while',
+  'with',
+  'yield',
+]);
+
+/**
  * Validates that a variable name is a valid JavaScript identifier
  * @param {string} name - The variable name to validate
  * @returns {boolean} True if valid, false otherwise
  */
 export const isValidVariableName = (name) => {
   if (typeof name !== 'string' || name.length === 0) {
+    return false;
+  }
+  // Check for reserved keywords
+  if (RESERVED_KEYWORDS.has(name)) {
     return false;
   }
   // Valid JS identifier: starts with letter, underscore, or $, followed by letters, digits, underscores, or $

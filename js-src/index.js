@@ -4,7 +4,13 @@
  */
 
 // Export main injection API
-export { inject, injectFromJson, injectFromDom, generateInjectionCode, remove } from './injector.js';
+export {
+  inject,
+  injectFromJson,
+  injectFromDom,
+  generateInjectionCode,
+  remove,
+} from './injector.js';
 
 // Export loader utilities
 export { loadScript, loadJson, loadFromScriptTag } from './loader.js';

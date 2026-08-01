@@ -159,7 +159,9 @@ describe('Injector', () => {
     });
 
     it('should throw ValidationError for invalid format', () => {
-      expect(() => generateInjectionCode({ foo: 1 }, { format: 'invalid' })).toThrow(ValidationError);
+      expect(() => generateInjectionCode({ foo: 1 }, { format: 'invalid' })).toThrow(
+        ValidationError
+      );
     });
 
     it('should escape closing script tags in JSON content', () => {

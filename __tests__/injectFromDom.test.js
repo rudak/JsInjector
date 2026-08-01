@@ -35,7 +35,10 @@ describe('injectFromDom', () => {
   });
 
   it('should decode hex-escaped content', () => {
-    addJsonTag('js-injector-dynamic', '{"MESSAGE":"\\u003C/script>","URL":"https:\\/\\/api.example.com"}');
+    addJsonTag(
+      'js-injector-dynamic',
+      '{"MESSAGE":"\\u003C/script>","URL":"https:\\/\\/api.example.com"}'
+    );
 
     const result = injectFromDom('#js-injector-dynamic');
 

@@ -1,5 +1,7 @@
 # JsInjector
 
+[![CI](https://github.com/rudak/JsInjector/actions/workflows/ci.yml/badge.svg)](https://github.com/rudak/JsInjector/actions/workflows/ci.yml)
+
 Injectez des constantes PHP dans le navigateur, sans template échappé de force et sans appeler votre backend depuis le JavaScript.
 
 `JsInjector` est un **bundle Symfony + une bibliothèque JavaScript** qui fait une seule chose : transformer vos valeurs serveur en variables JavaScript prêtes à l'emploi, de façon **sûre**, **prévisible** et **testable**.

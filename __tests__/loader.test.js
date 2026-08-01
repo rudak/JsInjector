@@ -1,8 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { loadScript, loadJson, loadFromScriptTag } from '../js-src/loader.js';
 import { LoadError, TimeoutError } from '../js-src/errors.js';
 
@@ -58,11 +58,11 @@ describe('Loader', () => {
 
   describe('loadJson', () => {
     beforeEach(() => {
-      global.fetch = jest.fn();
+      global.fetch = vi.fn();
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should reject with LoadError for invalid URL', async () => {

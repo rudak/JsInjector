@@ -1,29 +1,35 @@
 {
   "name": "js-injector",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Modern JavaScript library for injecting values into the browser context",
   "main": "dist/index.cjs.js",
-  "module": "js-src/index.js",
+  "module": "dist/index.esm.js",
+  "types": "types/index.d.ts",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./js-src/index.js",
+      "types": "./types/index.d.ts",
+      "import": "./dist/index.esm.js",
       "require": "./dist/index.cjs.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
+    "dist",
     "js-src",
-    "dist"
+    "types"
   ],
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "build": "rollup -c",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint js-src __tests__",
     "lint:fix": "eslint js-src __tests__ --fix",
     "format": "prettier --write \"js-src/**/*.js\" \"__tests__/**/*.js\"",
     "format:check": "prettier --check \"js-src/**/*.js\" \"__tests__/**/*.js\"",
-    "prepare": "npm run lint && npm run test"
+    "prepublishOnly": "npm run lint && npm test && npm run build",
+    "prepare": "npm run build"
   },
   "keywords": [
     "injection",
@@ -34,10 +40,13 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "prettier": "^3.2.5"
+    "@eslint/js": "^9.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^9.0.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.2.5",
+    "rollup": "^4.9.0",
+    "vitest": "^3.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

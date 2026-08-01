@@ -1,166 +1,104 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rudak\JsInjector\Command;
 
-use App\Entity\User\Like;
+use Rudak\JsInjector\Generator\JsFileGenerator;
 use Rudak\JsInjector\Harvester\HarvesterInterface;
+use Rudak\JsInjector\Harvester\ValuesHarvester;
 use Rudak\JsInjector\Helper\ValuesChecker;
-use Rudak\JsInjector\Helper\ValuesNormalizer;
 use Rudak\JsInjector\Helper\VariableTypeHelper;
-use Rudak\JsInjector\Service\Bim;
-use Rudak\JsInjector\Service\CacheManager;
+use Rudak\JsInjector\Validator\VariableNameValidator;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Rudak\JsInjector\Harvester\ValuesHarvester;
-use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Filesystem\Filesystem;
 
+#[AsCommand(name: 'rudak:generate:js', description: 'Force JS file generation from PHP values')]
 class RudakGenerateJsCommand extends Command
 {
-    const JS_FILENAME = 'injection.js';
-
-    protected static $defaultName = 'rudak:generate:js';
-
-    /**
-     * @var ValuesHarvester
-     */
-    private $valuesHarvester;
-
-    /**
-     * @var CacheManager
-     */
-    private $cacheManager;
-
-    /**
-     * @var array
-     */
-    private $valuesToInject;
-
-    /**
-     * @var EngineInterface
-     */
-    private $twig;
-
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var string
-     */
-    private $project_dir;
-
-    /**
-     * @var SymfonyStyle
-     */
-    private $io;
-
-    /**
-     * RudakGenerateJsCommand constructor.
-     * @param ValuesHarvester   $valuesHarvester
-     * @param CacheManager      $cacheManager
-     * @param \Twig_Environment $twig
-     * @param Filesystem        $filesystem
-     * @param string            $project_dir
-     */
-    public function __construct(ValuesHarvester $valuesHarvester, CacheManager $cacheManager, \Twig_Environment $twig, Filesystem $filesystem, string $project_dir)
-    {
-        $this->valuesHarvester = $valuesHarvester;
-        $this->cacheManager    = $cacheManager;
-        $this->valuesToInject  = [];
-        $this->twig            = $twig;
-        $this->filesystem      = $filesystem;
-        $this->project_dir     = $project_dir;
+    public function __construct(
+        private readonly ValuesHarvester $valuesHarvester,
+        private readonly JsFileGenerator $jsFileGenerator,
+        private readonly Filesystem $filesystem,
+        private readonly string $projectDir,
+        private readonly string $outputPath,
+        private readonly string $format,
+        private readonly ?string $namespace,
+    ) {
         parent::__construct();
     }
 
-
-    protected function configure()
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this
-            ->setDescription('Force JS file generation from PHP values');
+        $io = new SymfonyStyle($input, $output);
+        $io->title('JS FILE GENERATION');
+
+        $valuesToInject = $this->collectValues($io);
+
+        $this->showValuesToInject($io, $valuesToInject);
+        $this->generateJsFile($io, $valuesToInject);
+
+        $io->success('Job done !');
+
+        return Command::SUCCESS;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    /**
+     * @return array<string, mixed>
+     */
+    private function collectValues(SymfonyStyle $io): array
     {
-        $this->io = new SymfonyStyle($input, $output);
-
-        $this->io->title(' -- JS FILE GENERATION -- ');
+        $values = [];
 
         foreach ($this->valuesHarvester->getValuesProviders() as $provider) {
             if (!$provider instanceof HarvesterInterface) {
-                return;
-            }
-            if (true !== $checkResult = ValuesChecker::isValid($provider->getValues())) {
-                $this->io->warning(sprintf('"%d" is not a correct variable name in %s', $checkResult, get_class($provider)));
+                $io->warning(sprintf('Service "%s" does not implement HarvesterInterface', get_debug_type($provider)));
+
                 continue;
             }
-            $this->valuesToInject = array_merge($provider->getValues(), $this->valuesToInject);
+
+            $providerValues = $provider->getValues();
+
+            if (!ValuesChecker::isValid($providerValues)) {
+                $invalidKey = VariableNameValidator::findInvalidKey($providerValues);
+                $io->warning(sprintf('"%s" is not a correct variable name in %s', $invalidKey, get_class($provider)));
+
+                continue;
+            }
+
+            $values = array_merge($providerValues, $values);
         }
 
-        $this->showValuesToInject();
-        $this->generateJsFile();
-
-        $this->io->success('Job done !');
+        return $values;
     }
 
-
-    private function getJsPath($filename)
+    /**
+     * @param array<string, mixed> $values
+     */
+    private function showValuesToInject(SymfonyStyle $io, array $values): void
     {
-        return '/public/bundles/rudakInjection/' . $filename;
+        $rows = array_map(
+            static fn (string $key, mixed $value): array => [$key, VariableTypeHelper::getVariableType($value)],
+            array_keys($values),
+            array_values($values),
+        );
+
+        $io->table(['variable name', 'type'], $rows);
     }
 
-    private function generateJsFile()
+    /**
+     * @param array<string, mixed> $values
+     */
+    private function generateJsFile(SymfonyStyle $io, array $values): void
     {
-        $injectionFileAbsolutePath = $this->project_dir . $this->getJsPath(self::JS_FILENAME);
-        $this->filesystem->dumpFile($injectionFileAbsolutePath, $this->getJsFileContent());
-        $this->io->text(sprintf('Generated file : %s', $this->getJsPath(self::JS_FILENAME)));
-    }
+        $content = $this->jsFileGenerator->generate($values, $this->namespace, $this->format);
+        $absolutePath = $this->projectDir.DIRECTORY_SEPARATOR.$this->outputPath;
 
-    private function getJsFileContent()
-    {
-        $templateDirectory = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Resources' . DIRECTORY_SEPARATOR . 'templates';
-        $loader            = new \Twig_Loader_Filesystem($templateDirectory);
-        $this->twig->setLoader($loader);
-
-        return $this->twig->render('injection.js.twig', $this->getJsTemplateData());
-    }
-
-    private function getJsTemplateData()
-    {
-        return count($this->valuesToInject)
-            ? [
-                'jsonContent'   => $this->getJsonValuesForJsFile(),
-                'variableNames' => $this->getVariablesNames(),
-            ]
-            : [
-                'jsonContent'   => null,
-                'variableNames' => null,
-            ];
-    }
-
-    private function getJsonValuesForJsFile()
-    {
-        return json_encode($this->valuesToInject);
-    }
-
-    private function getVariablesNames()
-    {
-        return array_keys($this->valuesToInject);
-    }
-
-    private function showValuesToInject()
-    {
-        $valuesTypes = array_map(function ($key, $value) {
-            return [
-                $key, VariableTypeHelper::getVariableType($value),
-            ];
-        }, array_keys($this->valuesToInject), array_values($this->valuesToInject));
-        $this->io->table(['variable name', 'type'], $valuesTypes);
+        $this->filesystem->dumpFile($absolutePath, $content);
+        $io->text(sprintf('Generated file : %s', $this->outputPath));
     }
 }

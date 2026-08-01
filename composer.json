@@ -1,14 +1,38 @@
 {
     "name": "rudak/js-injector",
-    "description": "Injection de constantes PHP dans un JS - TEST",
+    "description": "Symfony bundle to inject PHP constants into a JavaScript file",
+    "type": "symfony-bundle",
     "license": "Apache-2.0",
     "require": {
-        "php": ">=5.6"
+        "php": "^8.2",
+        "symfony/config": "^6.4 || ^7.0",
+        "symfony/console": "^6.4 || ^7.0",
+        "symfony/dependency-injection": "^6.4 || ^7.0",
+        "symfony/filesystem": "^6.4 || ^7.0",
+        "symfony/http-kernel": "^6.4 || ^7.0",
+        "symfony/yaml": "^6.4 || ^7.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.49",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^10.5 || ^11.0"
     },
     "autoload": {
         "psr-4": {
             "Rudak\\JsInjector\\": "src"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rudak\\JsInjector\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.x-dev"
+        }
+    },
+    "config": {
+        "allow-plugins": false
     }
 }
-

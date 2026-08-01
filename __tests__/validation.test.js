@@ -49,6 +49,15 @@ describe('Validation Utils', () => {
       expect(isValidVariableName('null')).toBe(false);
       expect(isValidVariableName('true')).toBe(false);
       expect(isValidVariableName('false')).toBe(false);
+      expect(isValidVariableName('await')).toBe(false);
+      expect(isValidVariableName('implements')).toBe(false);
+      expect(isValidVariableName('interface')).toBe(false);
+      expect(isValidVariableName('package')).toBe(false);
+      expect(isValidVariableName('private')).toBe(false);
+      expect(isValidVariableName('protected')).toBe(false);
+      expect(isValidVariableName('public')).toBe(false);
+      expect(isValidVariableName('arguments')).toBe(false);
+      expect(isValidVariableName('eval')).toBe(false);
     });
   });
 

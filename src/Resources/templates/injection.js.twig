@@ -1,6 +1,0 @@
-{% if  jsonContent and variableNames %}
-// json to inject
-var jsonContent = '{{ jsonContent|raw }}' || {};
-// creating {{ variableNames|length }} variable
-var { {{ variableNames|join(',') }} } = JSON.parse(jsonContent);
-{% endif %}

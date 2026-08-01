@@ -118,17 +118,31 @@ describe('Injector', () => {
   });
 
   describe('generateInjectionCode', () => {
-    it('should generate JavaScript code for injection', () => {
+    it('should generate an ES module by default', () => {
       const code = generateInjectionCode({ foo: 1, bar: 'hello' });
 
-      expect(code).toContain('jsonContent');
+      expect(code).toContain('export default');
       expect(code).toContain('foo');
       expect(code).toContain('bar');
-      expect(code).toContain('JSON.parse');
+      expect(code).toContain('"foo":1');
     });
 
-    it('should generate namespace code when namespace is provided', () => {
+    it('should generate a named export when namespace is provided', () => {
       const code = generateInjectionCode({ foo: 1 }, { namespace: 'myApp' });
+
+      expect(code).toContain('export const myApp');
+      expect(code).toContain('"foo":1');
+    });
+
+    it('should generate globals when format is globals', () => {
+      const code = generateInjectionCode({ foo: 1, bar: 'hello' }, { format: 'globals' });
+
+      expect(code).toContain('INJECTED_VALUES');
+      expect(code).toContain('var { foo, bar } = INJECTED_VALUES;');
+    });
+
+    it('should generate a namespace variable when format is globals and namespace provided', () => {
+      const code = generateInjectionCode({ foo: 1 }, { format: 'globals', namespace: 'myApp' });
 
       expect(code).toContain('var myApp');
       expect(code).toContain('"foo":1');
@@ -144,9 +158,14 @@ describe('Injector', () => {
       expect(() => generateInjectionCode({ '123invalid': 1 })).toThrow(ValidationError);
     });
 
-    it('should escape single quotes in JSON content', () => {
-      const code = generateInjectionCode({ message: "it's working" });
-      expect(code).toContain("\\'");
+    it('should throw ValidationError for invalid format', () => {
+      expect(() => generateInjectionCode({ foo: 1 }, { format: 'invalid' })).toThrow(ValidationError);
+    });
+
+    it('should escape closing script tags in JSON content', () => {
+      const code = generateInjectionCode({ message: '</script>' });
+      expect(code).not.toContain('</script>');
+      expect(code).toContain('\\u003C/script>');
     });
   });
 

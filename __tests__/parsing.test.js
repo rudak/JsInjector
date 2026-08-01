@@ -101,6 +101,10 @@ describe('Parsing Utils', () => {
       expect(toJsonString([1, 2, 3])).toBe('[1,2,3]');
       expect(toJsonString('string')).toBe('"string"');
     });
+
+    it('should escape closing script tags', () => {
+      expect(toJsonString('</script>')).toBe('"\\u003C/script>"');
+    });
   });
 
   describe('parseJsonSafely', () => {

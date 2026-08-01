@@ -1,22 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rudak\JsInjector\Helper;
 
-class ValuesChecker
+use Rudak\JsInjector\Validator\VariableNameValidator;
+
+final class ValuesChecker
 {
     /**
-     * Vérifie si tous les indexes sont des chaines
+     * Checks that every key of the given values is a valid JavaScript variable name.
      *
-     * @param array $values
-     * @return bool|int|string
+     * @param array<string, mixed> $values
      */
-    public static function isValid(array $values)
+    public static function isValid(array $values): bool
     {
-        foreach ($values as $key => $value) {
-            if (is_numeric ($key)) {
-                return $key;
-            }
-        }
-        return true;
+        return null === VariableNameValidator::findInvalidKey($values);
     }
 }

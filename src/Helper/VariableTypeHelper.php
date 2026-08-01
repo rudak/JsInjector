@@ -1,53 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rudak\JsInjector\Helper;
 
-class VariableTypeHelper
+final class VariableTypeHelper
 {
-    /**
-     * Renvoie le type de la variable injectée
-     *
-     * @param $value
-     * @return string
-     */
-    public static function getVariableType($value)
+    public static function getVariableType(mixed $value): string
     {
         $type = gettype($value);
-        switch ($type) {
-            case 'array':
-                return sprintf('%s [Elements: %d, Max depth: %d]',
-                    $type,
-                    count($value),
-                    self::array_depth($value)
-                );
-                break;
-            default:
-                return $type;
+
+        if ('array' === $type) {
+            return sprintf('%s [Elements: %d, Max depth: %d]', $type, count($value), self::arrayDepth($value));
         }
+
+        return $type;
     }
 
     /**
-     * Renvoie la profondeur d'un tableau
-     *
-     * @param $array
-     * @return float|int
+     * @param array<mixed> $array
      */
-    private static function array_depth($array)
+    private static function arrayDepth(array $array): int
     {
-        $max_indentation = 1;
+        $maxDepth = 1;
 
-        $array_str = print_r($array, true);
-        $lines     = explode("\n", $array_str);
+        foreach ($array as $value) {
+            if (is_array($value)) {
+                $depth = 1 + self::arrayDepth($value);
 
-        foreach ($lines as $line) {
-            $indentation = (strlen($line) - strlen(ltrim($line))) / 4;
-
-            if ($indentation > $max_indentation) {
-                $max_indentation = $indentation;
+                if ($depth > $maxDepth) {
+                    $maxDepth = $depth;
+                }
             }
         }
 
-        return ceil(($max_indentation - 1) / 2) + 1;
+        return $maxDepth;
     }
-
 }

@@ -7,12 +7,18 @@
 # Dependencies
 node_modules/
 vendor/
+composer.lock
 
 # Build output
 dist/
 
 # Test coverage
 coverage/
+
+# PHP tooling
+.phpunit.cache/
+.phpunit.result.cache
+.php-cs-fixer.cache
 
 # OS files
 .DS_Store

@@ -1,0 +1,12 @@
+# Distribution archive (export-ignore) for composer-based installs
+/.github export-ignore
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.php-cs-fixer.php export-ignore
+/.prettierrc export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml export-ignore
+/eslint.config.js export-ignore
+/jest.config.js export-ignore
+/rollup.config.js export-ignore

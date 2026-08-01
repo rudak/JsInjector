@@ -47,7 +47,7 @@ export const getArrayDepth = (arr) => {
 };
 
 /**
- * Deep clones a value using JSON serialization
+ * Deep clones a value using structuredClone when available, falling back to JSON round-trip.
  * @param {*} value - The value to clone
  * @returns {*} A deep clone of the value
  */
@@ -55,16 +55,23 @@ export const deepClone = (value) => {
   if (value === undefined) {
     return undefined;
   }
+
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value);
+  }
+
   return JSON.parse(JSON.stringify(value));
 };
 
 /**
- * Converts a value to a safe JSON string
+ * Converts a value to a JSON string that is safe to embed in a `<script>` tag.
+ * Since ES2019, JSON.stringify already escapes U+2028/U+2029 and slash sequences
+ * like `</script>` are neutralized by escaping the closing tag.
  * @param {*} value - The value to convert
- * @returns {string} JSON string representation
+ * @returns {string} JSON string safe for JS embedding
  */
 export const toJsonString = (value) => {
-  return JSON.stringify(value);
+  return JSON.stringify(value).replace(/</g, '\\u003C');
 };
 
 /**

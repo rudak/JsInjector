@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  lint-and-test:
+  js-lint-and-test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -36,9 +36,52 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      - name: Build
+        run: npm run build
+
       - name: Run tests
         run: npm test
 
       - name: Run tests with coverage
         run: npm run test:coverage
         if: matrix.node-version == '20.x'
+
+  php-quality:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: ['8.2', '8.3', '8.4']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit

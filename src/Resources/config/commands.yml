@@ -1,6 +1,0 @@
-services:
-
-#  Rudak\JsInjector\Command\RudakGenerateJsCommand:
-#    public: true
-#    tags:
-#      - name: 'console.command'
